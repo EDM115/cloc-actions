@@ -13,7 +13,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install or upgrade Strawberry Perl
+      - name: Install or upgrade Strawberry Perl (if needed)
         shell: pwsh
         run: |
           if (Get-Command perl -ErrorAction SilentlyContinue) {
@@ -75,7 +75,7 @@ jobs:
           cpan -i PAR::Packer
           cpan -if Win32::LongPath || cpanm --notest Win32::LongPath
           Write-Host "Building executable..."
-          pp -M Win32::LongPath -M Encode::Unicode -M Digest::MD5 -c -x -o "cloc-$env:VERSION_NUM.exe" cloc
+          pp -M Win32::LongPath -M Encode::Unicode -M Digest::MD5 -M PAR::Packer::DeclaredRefs -c -x -o "cloc-$env:VERSION_NUM.exe" cloc
 
       - name: Upload executable to VirusTotal and get analysis URL
         id: vt_upload
