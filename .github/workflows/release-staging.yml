@@ -13,17 +13,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install or upgrade Strawberry Perl
-        shell: pwsh
-        run: |
-          if (Get-Command perl -ErrorAction SilentlyContinue) {
-            # see https://github.com/StrawberryPerl/Perl-Dist-Strawberry/issues/19#issuecomment-2401043349
-            choco uninstall strawberryperl -y
-          }
-          choco install strawberryperl -y
-          perl -V
-          cpan -v
-
       # Branch name must be in the format "release-vX.XX"
       - name: Extract version from branch name
         id: get_version
@@ -33,8 +22,8 @@ jobs:
           if (-not $branch) { $branch = "${{ github.ref }}" }
           if ($branch -match 'release-v(?<ver>[0-9]+\.[0-9]+)') {
             $ver = $Matches["ver"]
-            Write-Host "VERSION_NUM=$ver" >> $env:GITHUB_OUTPUT
-            Write-Host "DISPLAY_VERSION=v$ver" >> $env:GITHUB_OUTPUT
+            echo "VERSION_NUM=$ver" >> $env:GITHUB_OUTPUT
+            echo "DISPLAY_VERSION=v$ver" >> $env:GITHUB_OUTPUT
             Write-Host "Extracted version: $ver"
           }
           else {
@@ -63,6 +52,17 @@ jobs:
             -replace 'cloc-\d+\.\d+\.exe', "cloc-$ver.exe" `
             -replace 'pp -M Win32::LongPath -M Encode::Unicode -M Digest::MD5 -c -x -o cloc-\d+\.\d+\.exe', "pp -M Win32::LongPath -M Encode::Unicode -M Digest::MD5 -c -x -o cloc-$ver.exe" `
             -replace '<tt>cloc-\d+\.\d+\.exe</tt>', "<tt>cloc-$ver.exe</tt>" | Set-Content README.md
+      
+      - name: Install or upgrade Strawberry Perl
+        shell: pwsh
+        run: |
+          if (Get-Command perl -ErrorAction SilentlyContinue) {
+            # see https://github.com/StrawberryPerl/Perl-Dist-Strawberry/issues/19#issuecomment-2401043349
+            choco uninstall strawberryperl -y
+          }
+          choco install strawberryperl -y
+          perl -V
+          cpan -v
 
       - name: Install CPAN dependencies and build executable
         shell: pwsh
@@ -96,7 +96,7 @@ jobs:
           $response = Invoke-RestMethod -Uri "https://www.virustotal.com/api/v3/files" -Method POST -Headers $headers -Form $body
           $vtId = $response.data.id
           $vtUrl = "https://www.virustotal.com/gui/file/$vtId"
-          Write-Host "VT_URL=$vtUrl" >> $env:GITHUB_OUTPUT
+          echo "VT_URL=$vtUrl" >> $env:GITHUB_OUTPUT
           Write-Host "VirusTotal analysis available at $vtUrl"
       
       - name: Upload artifact
