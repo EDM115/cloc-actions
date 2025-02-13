@@ -75,7 +75,13 @@ jobs:
           cpan -i PAR::Packer
           cpan -if Win32::LongPath || cpanm --notest Win32::LongPath
           Write-Host "Building executable..."
-          pp -M Win32::LongPath -M Encode::Unicode -M Digest::MD5 -MDexperimental=declared_refs -c -x -o "cloc-$env:VERSION_NUM.exe" cloc
+          $clocPath = "cloc"
+          $clocContent = Get-Content $clocPath
+          $updatedClocContent = $clocContent -replace '(use strict;)', '$1`nuse experimental ''declared_refs'';'
+          Set-Content -Path $clocPath -Value $updatedClocContent          
+          pp -M Win32::LongPath -M Encode::Unicode -M Digest::MD5 -c -x -o "cloc-$env:VERSION_NUM.exe" cloc
+          $updatedClocContent = $updatedClocContent -replace '(use experimental ''declared_refs'';)', ''
+          Set-Content -Path $clocPath -Value $updatedClocContent
 
       - name: Upload executable to VirusTotal and get analysis URL
         id: vt_upload
