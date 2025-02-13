@@ -2,7 +2,7 @@ name: Create Release
 
 on:
   pull_request:
-    types: [labeled]
+    types: [opened, labeled]
 
 jobs:
   create_release:
