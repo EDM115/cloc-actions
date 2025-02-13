@@ -137,9 +137,12 @@ jobs:
             (" " * 16) + "Release Notes for cloc version $ver",
             (" " * 19) + "https://github.com/AlDanial/cloc",
             (" " * 29) + "$currentDate",
-            ""
+            "",
+            $processedNotes.Split("`n"),
+            "",
+            ("=" * 76)
           )
-          $header + $processedNotes.Split("`n") | Set-Content Unix/NEWS -Encoding UTF8
+          $header | Set-Content Unix/NEWS -Encoding UTF8
 
       - name: Commit changes and update PR labels
         shell: pwsh
