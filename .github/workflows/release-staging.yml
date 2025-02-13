@@ -12,11 +12,22 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Install or upgrade Strawberry Perl
+      
+      - name: Check installed programs
         shell: pwsh
         run: |
-          perl -V ? choco upgrade strawberryperl -y : choco install strawberryperl -y && echo "C:\strawberry\c\bin;C:\strawberry\perl\site\bin;C:\strawberry\perl\bin" >> $env:GITHUB_PATH
+          choco list -y
+          choco list -i -y
+
+      - name: Install or upgrade Strawberry Perl (if needed)
+        shell: pwsh
+        run: |
+          if (Get-Command perl -ErrorAction SilentlyContinue) {
+            choco upgrade strawberryperl -y
+          } else {
+            choco install strawberryperl -y
+          }
+          "C:\strawberry\c\bin;C:\strawberry\perl\site\bin;C:\strawberry\perl\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding ascii -Append
           perl -V
           cpan -v
 
