@@ -2,7 +2,7 @@ name: Release Staging Build
 
 on:
   pull_request:
-    types: [opened, labeled]
+    types: [labeled]
 
 jobs:
   staging_build:
