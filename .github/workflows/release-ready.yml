@@ -2,16 +2,18 @@ name: Create Release
 
 on:
   pull_request:
-    types: [labeled]
+    types: [closed]
 
 jobs:
   create_release:
-    if: ${{ github.event.label.name == 'release-ready' }}
+    if: ${{ github.event.pull_request.merged == true && github.head_ref == 'release-v*' }}
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: "master"
 
       - name: Extract version from branch name
         id: get_version
@@ -27,27 +29,33 @@ jobs:
 
       - name: Package repository as tar.gz
         run: |
-          tar -czf cloc-$VERSION.tar.gz --exclude='.git' .
+          VER = "${{ steps.get_version.outputs.VERSION }}"
+          tar -czf cloc-$VER.tar.gz --exclude='.git' .
+
+      - name: Get artifact url
+        run: |
+          ARTIFACT_URL=$(gh pr view ${{ github.event.pull_request.number }} --json comments -q '.[] | select(.body | contains("**Built executable artifact:**")) | .body' | grep -oP '(?<=\(https:\/\/).*?(?=\))')
+          curl -L -o artifact.zip "$ARTIFACT_URL"
 
       - name: Prepare renamed release assets
         run: |
-          cp cloc cloc-$VERSION.pl
-          cp Unix/NEWS release_notes-$VERSION.txt
-          curl -sL "${{ github.event.pull_request.comments_url }}" | jq -r '.[] | select(.body | contains("cloc-")) | .body | match("cloc-([0-9]+\\.[0-9]+)\\.zip") | .captures[0].string' | xargs -I {} curl -sL -o cloc-{}.zip {}
-          unzip cloc-$VERSION.zip
+          VER="${{ steps.get_version.outputs.VERSION }}"
+          cp cloc cloc-$VER.pl
+          cp Unix/NEWS release_notes-$VER.txt
+          unzip artifact.zip
 
       - name: Create GitHub release with assets
         id: create_release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v$VERSION"
-          name: "v$VERSION"
+          tag_name: "${{ steps.get_version.outputs.DISPLAY_VERSION }}"
+          name: "${{ steps.get_version.outputs.DISPLAY_VERSION }}"
           body: "${{ github.event.pull_request.body }}"
           files: |
-            cloc-$VERSION.tar.gz
+            cloc-${{ steps.get_version.outputs.VERSION }}.tar.gz
             README.md
-            cloc-$VERSION.pl
-            cloc-$VERSION.exe
-            release_notes-$VERSION.txt
+            cloc-${{ steps.get_version.outputs.VERSION }}.pl
+            cloc-${{ steps.get_version.outputs.VERSION }}.exe
+            release_notes-${{ steps.get_version.outputs.VERSION }}.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
