@@ -2,7 +2,7 @@ name: Release Staging Build
 
 on:
   pull_request:
-    types: [labeled]
+    types: [opened, labeled]
 
 jobs:
   staging_build:
@@ -21,7 +21,7 @@ jobs:
           perl -V
           cpan -v
 
-      # Branch name must be in the form "release-vX.XX"
+      # Branch name must be in the format "release-vX.XX" 
       - name: Extract version from branch name
         id: get_version
         shell: pwsh
