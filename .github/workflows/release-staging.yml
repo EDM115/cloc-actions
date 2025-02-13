@@ -34,7 +34,9 @@ jobs:
           if ($branch -match 'release-v(?<ver>[0-9]+\.[0-9]+)') {
             $ver = $Matches["ver"]
             Write-Host "VERSION_NUM=$ver" >> $env:GITHUB_ENV
+            Write-Output "VERSION_NUM=$ver"
             Write-Host "DISPLAY_VERSION=v$ver" >> $env:GITHUB_ENV
+            Write-Output "DISPLAY_VERSION=v$ver"
             Write-Host "Extracted version: $ver"
           }
           else {
@@ -97,6 +99,7 @@ jobs:
           $vtId = $response.data.id
           $vtUrl = "https://www.virustotal.com/gui/file/$vtId"
           Write-Host "VT_URL=$vtUrl" >> $env:GITHUB_ENV
+          Write-Output "VT_URL=$vtUrl"
           Write-Host "VirusTotal analysis available at $vtUrl"
       
       - name: Upload artifact

@@ -21,7 +21,7 @@ jobs:
           BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
           if [[ "$BRANCH" =~ release-v([0-9]+\.[0-9]+) ]]; then
             VERSION="${BASH_REMATCH[1]}"
-            echo "VERSION=$VERSION" >> $GITHUB_ENV
+            echo "VERSION=$VERSION"
             echo "DISPLAY_VERSION=v$VERSION"
           else
             echo "Branch name does not match expected format (release-vX.XX)!" && exit 1
@@ -45,7 +45,6 @@ jobs:
           unzip artifact.zip
 
       - name: Create GitHub release with assets
-        id: create_release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: "${{ steps.get_version.outputs.DISPLAY_VERSION }}"
