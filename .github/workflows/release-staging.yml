@@ -2,7 +2,7 @@ name: Release Staging Build
 
 on:
   pull_request:
-    types: [opened, labeled]
+    types: [labeled]
 
 jobs:
   staging_build:
@@ -13,7 +13,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Strawberry Perl (if needed)
+      - name: Install Strawberry Perl
         shell: pwsh
         run: |
           choco install strawberryperl --yes
