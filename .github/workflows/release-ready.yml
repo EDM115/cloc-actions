@@ -1,0 +1,53 @@
+name: Create Release
+
+on:
+  pull_request:
+    types: [labeled]
+
+jobs:
+  create_release:
+    if: ${{ github.event.label.name == "release-ready" }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract version from branch name
+        id: get_version
+        run: |
+          BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
+          if [[ "$BRANCH" =~ release-v([0-9]+\.[0-9]+) ]]; then
+            VERSION="${BASH_REMATCH[1]}"
+            echo "VERSION=$VERSION" >> $GITHUB_ENV
+            echo "DISPLAY_VERSION=v$VERSION"
+          else
+            echo "Branch name does not match expected format (release-vX.XX)!" && exit 1
+          fi
+
+      - name: Package repository as tar.gz
+        run: |
+          tar -czf cloc-$VERSION.tar.gz --exclude='.git' .
+
+      - name: Prepare renamed release assets
+        run: |
+          cp cloc cloc-$VERSION.pl
+          cp Unix/NEWS release_notes-$VERSION.txt
+          curl -sL "${{ github.event.pull_request.comments_url }}" | jq -r '.[] | select(.body | contains("cloc-")) | .body | match("cloc-([0-9]+\\.[0-9]+)\\.zip") | .captures[0].string' | xargs -I {} curl -sL -o cloc-{}.zip {}
+          unzip cloc-$VERSION.zip
+
+      - name: Create GitHub release with assets
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v$VERSION"
+          name: "v$VERSION"
+          body: "${{ github.event.pull_request.body }}"
+          files: |
+            cloc-$VERSION.tar.gz
+            README.md
+            cloc-$VERSION.pl
+            cloc-$VERSION.exe
+            release_notes-$VERSION.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
