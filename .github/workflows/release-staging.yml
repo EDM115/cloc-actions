@@ -72,7 +72,8 @@ jobs:
           cpan -i Digest::MD5
           cpan -i Regexp::Common
           cpan -i Algorithm::Diff
-          cpan -i RSCHUPP/PAR-Packer-1.050.tar.gz
+          cpan -i App::cpanminus
+          cpanm PAR::Packer@1.050
           cpan -if Win32::LongPath || cpanm --notest Win32::LongPath
           Write-Host "Building executable..."
           pp -M Win32::LongPath -M Encode::Unicode -M Digest::MD5 -c -x -o "cloc-$ver.exe" cloc
