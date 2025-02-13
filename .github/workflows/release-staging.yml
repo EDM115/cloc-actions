@@ -1,0 +1,158 @@
+name: Release Staging Build
+
+on:
+  pull_request:
+    types: [labeled]
+
+jobs:
+  staging_build:
+    if: ${{ github.event.label.name == "release-staging" }}
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Strawberry Perl (if needed)
+        shell: pwsh
+        run: |
+          choco install strawberryperl --yes
+          echo "C:\strawberry\c\bin;C:\strawberry\perl\site\bin;C:\strawberry\perl\bin" >> $env:GITHUB_PATH
+          perl -V
+          cpan -v
+
+      # Branch name must be in the form "release-vX.XX"
+      - name: Extract version from branch name
+        id: get_version
+        shell: pwsh
+        run: |
+          $branch = "${{ github.head_ref }}"
+          if (-not $branch) { $branch = "${{ github.ref }}" }
+          if ($branch -match 'release-v(?<ver>[0-9]+\.[0-9]+)') {
+            $ver = $Matches["ver"]
+            Write-Host "VERSION_NUM=$ver" >> $env:GITHUB_ENV
+            Write-Host "DISPLAY_VERSION=v$ver" >> $env:GITHUB_ENV
+            Write-Host "Extracted version: $ver"
+          }
+          else {
+            Write-Error "Branch name does not match expected format (release-vX.XX)."
+          }
+
+      - name: Update version in cloc files
+        shell: pwsh
+        run: |
+          $ver = $env:VERSION_NUM
+          Write-Host "Updating version in cloc and Unix/cloc to '$ver'"
+          (Get-Content cloc) -replace 'my \$VERSION = ".*";', "my \$VERSION = `"$ver`";" | Set-Content cloc
+          (Get-Content Unix/cloc) -replace 'my \$VERSION = ".*";', "my \$VERSION = `"$ver`";" | Set-Content Unix/cloc
+
+      - name: Update README.md with version and date
+        shell: pwsh
+        run: |
+          $ver = $env:VERSION_NUM
+          $disp = $env:DISPLAY_VERSION
+          $currentDate = (Get-Date).ToString("MMM. d, yyyy")
+          Write-Host "Updating README.md with version $disp and date $currentDate"
+          (Get-Content README.md) `
+            -replace 'Latest release:\s+v\d+\.\d+\s+\(.*\)', "Latest release:  $disp ($currentDate)" `
+            -replace 'badge/version-\d+\.\d+', "badge/version-$ver" `
+            -replace 'cloc-\d+\.\d+\.pl', "cloc-$ver.pl" `
+            -replace 'cloc-\d+\.\d+\.exe', "cloc-$ver.exe" `
+            -replace 'pp -M Win32::LongPath -M Encode::Unicode -M Digest::MD5 -c -x -o cloc-\d+\.\d+\.exe', "pp -M Win32::LongPath -M Encode::Unicode -M Digest::MD5 -c -x -o cloc-$ver.exe" `
+            -replace '<tt>cloc-\d+\.\d+\.exe</tt>', "<tt>cloc-$ver.exe</tt>" | Set-Content README.md
+
+      - name: Install CPAN dependencies and build executable
+        shell: pwsh
+        run: |
+          Write-Host "Installing CPAN modules..."
+          cpan -i Digest::MD5
+          cpan -i Regexp::Common
+          cpan -i Algorithm::Diff
+          cpan -i PAR::Packer
+          cpan -if Win32::LongPath || cpanm --notest Win32::LongPath
+          Write-Host "Building executable..."
+          pp -M Win32::LongPath -M Encode::Unicode -M Digest::MD5 -c -x -o "cloc-$env:VERSION_NUM.exe" cloc
+
+      - name: Upload executable to VirusTotal and get analysis URL
+        id: vt_upload
+        shell: pwsh
+        run: |
+          $apiKey = "${{ secrets.VIRUSTOTAL_API_KEY }}"
+          $exeFile = "cloc-$env:VERSION_NUM.exe"
+          $absoluteFilePath = (Get-Location).Path + "\" + $exeFile
+          Write-Host "Uploading $absoluteFilePath to VirusTotal..."
+          $headers=@{}
+          $headers.Add("accept", "application/json")
+          $headers.Add("content-type", "multipart/form-data")
+          $headers.Add("x-apikey", $apiKey)
+          $body = @{
+            file = [System.IO.File]::ReadAllBytes($absoluteFilePath)
+          }
+          $response = Invoke-RestMethod -Uri "https://www.virustotal.com/api/v3/files" -Method POST -Headers $headers -Form $body
+          $vtId = $response.data.id
+          $vtUrl = "https://www.virustotal.com/gui/file/$vtId"
+          Write-Host "VT_URL=$vtUrl" >> $env:GITHUB_ENV
+          Write-Host "VirusTotal analysis available at $vtUrl"
+
+      - name: Zip the built executable
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "cloc-$env:VERSION_NUM.exe" -DestinationPath "cloc-$env:VERSION_NUM.zip"
+
+      - name: Post comment with artifact and VirusTotal URL
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            **Built executable:**
+            *(You can download the zipped file attached as an artifact)*
+
+            **VirusTotal Analysis:** $env:VT_URL
+
+      - name: Clean up local exe and zip
+        shell: pwsh
+        run: |
+          Remove-Item "cloc-$env:VERSION_NUM.exe"
+          Remove-Item "cloc-$env:VERSION_NUM.zip"
+
+      - name: Update README recent versions entry
+        shell: pwsh
+        run: |
+          $ver = $env:VERSION_NUM
+          $vtUrl = $env:VT_URL
+          $readme = Get-Content README.md -Raw
+          $pattern = 'The entries for recent versions are:\s*\r?\n\s*\r?\n'
+          $replacement = "The entries for recent versions are:`n`ncloc-$ver.exe: $vtUrl`n`n"
+          $newReadme = [regex]::Replace($readme, $pattern, $replacement)
+          Set-Content -Path README.md -Value $newReadme
+
+      - name: Update Unix/NEWS with release notes
+        shell: pwsh
+        run: |
+          $ver = $env:VERSION_NUM
+          $currentDate = (Get-Date).ToString("MMM. d, yyyy")
+          $prBody = "${{ github.event.pull_request.body }}"
+          $processedNotes = $prBody -replace '^- ', '    o ' -replace '[\*\`_]', ''
+          $header = @(
+            (" " * 16) + "Release Notes for cloc version $ver",
+            (" " * 19) + "https://github.com/AlDanial/cloc",
+            (" " * 29) + "$currentDate",
+            ""
+          )
+          $header + $processedNotes.Split("`n") | Set-Content Unix/NEWS -Encoding UTF8
+
+      - name: Commit changes and update PR labels
+        shell: pwsh
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add cloc README.md Unix/NEWS
+          git commit -m "Prepare release version $env:VERSION_NUM"
+          git push
+          $prNumber = "${{ github.event.pull_request.number }}"
+          $repo = "${{ github.repository }}"
+          $token = "${{ secrets.GITHUB_TOKEN }}"
+          $labelsUrl = "https://api.github.com/repos/$repo/issues/$prNumber/labels"
+          Invoke-RestMethod -Method Delete -Uri "$labelsUrl/release-staging" -Headers @{ Authorization = "token $token" }
+          Invoke-RestMethod -Method Post -Uri $labelsUrl -Headers @{ Authorization = "token $token" } `
+            -Body '{"labels": ["release-ready"]}' -ContentType 'application/json'
