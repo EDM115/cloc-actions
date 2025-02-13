@@ -13,7 +13,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install or upgrade Strawberry Perl
+      - name: Install or upgrade Strawberry Perl (if needed)
         shell: pwsh
         run: |
           perl -V ? choco upgrade strawberryperl -y : choco install strawberryperl -y && echo "C:\strawberry\c\bin;C:\strawberry\perl\site\bin;C:\strawberry\perl\bin" >> $env:GITHUB_PATH
