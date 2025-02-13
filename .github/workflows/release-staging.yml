@@ -1,4 +1,4 @@
-name: Release Staging Build
+name: Build Windows executable
 
 on:
   pull_request:
