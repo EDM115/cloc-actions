@@ -74,9 +74,8 @@ jobs:
           cpan -i Algorithm::Diff
           cpan -i PAR::Packer
           cpan -if Win32::LongPath || cpanm --notest Win32::LongPath
-          $env:Path += ";C:\Strawberry\perl\bin;C:\Strawberry\perl\site\bin;C:\Strawberry\c\bin" && refreshenv
           Write-Host "Building executable..."
-          pp -M Win32::LongPath -M Encode::Unicode -M Digest::MD5 -c -x -o "cloc-$ver.exe" cloc
+          & "C:\strawberry\perl\site\bin\pp.exe" -M Win32::LongPath -M Encode::Unicode -M Digest::MD5 -c -x -o "cloc-$ver.exe" cloc
 
       - name: Upload executable to VirusTotal and get analysis URL
         id: vt_upload
