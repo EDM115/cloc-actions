@@ -19,7 +19,7 @@ jobs:
           choco list -y
           choco list -i -y
 
-      - name: Install or upgrade Strawberry Perl (if needed)
+      - name: Install or upgrade Strawberry Perl
         shell: pwsh
         run: |
           if (Get-Command perl -ErrorAction SilentlyContinue) {
