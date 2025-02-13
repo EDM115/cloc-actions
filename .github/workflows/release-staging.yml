@@ -60,7 +60,7 @@ jobs:
             # see https://github.com/StrawberryPerl/Perl-Dist-Strawberry/issues/19#issuecomment-2401043349
             choco uninstall strawberryperl -y
           }
-          choco install strawberryperl -y
+          choco install strawberryperl --version 5.30.2.1 -y
           perl -V
           cpan -v
 
