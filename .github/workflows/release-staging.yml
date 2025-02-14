@@ -35,8 +35,9 @@ jobs:
         run: |
           $ver = "${{ steps.get_version.outputs.VERSION_NUM }}"
           Write-Host "Updating version in cloc and Unix/cloc to '$ver'"
-          (Get-Content cloc) -replace 'my \$VERSION = ".*";', "my \$VERSION = `"$ver`";" | Set-Content cloc
-          (Get-Content Unix/cloc) -replace 'my \$VERSION = ".*";', "my \$VERSION = `"$ver`";" | Set-Content Unix/cloc
+          $replaceVer = 'my $VERSION = "' + $ver + '";'
+          (Get-Content cloc) -replace 'my \$VERSION = ".*";', $replaceVer | Set-Content cloc
+          (Get-Content Unix/cloc) -replace 'my \$VERSION = ".*";', $replaceVer | Set-Content Unix/cloc
 
       - name: Update README.md with version and date
         shell: pwsh
@@ -49,7 +50,7 @@ jobs:
             -replace 'Latest release:\s+v\d+\.\d+\s+\(.*\)', "Latest release:  $disp ($currentDate)" `
             -replace 'badge/version-\d+\.\d+', "badge/version-$ver" `
             -replace 'cloc-\d+\.\d+\.pl', "cloc-$ver.pl" `
-            -replace 'cloc-\d+\.\d+\.exe', "cloc-$ver.exe" `
+            -replace 'cloc-\d+\.\d+\.exe(?!:)', "cloc-$ver.exe" `
             -replace 'pp -M Win32::LongPath -M Encode::Unicode -M Digest::MD5 -c -x -o cloc-\d+\.\d+\.exe', "pp -M Win32::LongPath -M Encode::Unicode -M Digest::MD5 -c -x -o cloc-$ver.exe" `
             -replace '<tt>cloc-\d+\.\d+\.exe</tt>', "<tt>cloc-$ver.exe</tt>" | Set-Content README.md
       
@@ -72,20 +73,13 @@ jobs:
           cpanm Regexp::Common
           cpanm Algorithm::Diff
           cpanm PAR::Packer
-          cpanm -n Win32::LongPath
+          cpanm Win32::LongPath || cpanm -n Win32::LongPath
       
       - name: Build executable
         shell: pwsh
         run: |
-          $ver = "${{ steps.get_version.outputs.VERSION_NUM }}"          
-          $content = Get-Content cloc -Raw -Encoding UTF8
-          # This assumes that the first line will always be the shebang
-          $replacement = '$1use experimental ''declared_refs'';' + "`n"
-          $newContent = $content -replace '^(#!.*\n)', $replacement
-          $newContent | Set-Content cloc-build.pl -Encoding UTF8
-          curl bashupload.com -T cloc-build.pl
-          pp -M Win32::LongPath -M Encode::Unicode -M Digest::MD5 -c -x -o "cloc-$ver.exe" cloc-build.pl
-          Remove-Item cloc-build.pl
+          $ver = "${{ steps.get_version.outputs.VERSION_NUM }}"
+          pp -M Win32::LongPath -M Encode::Unicode -M Digest::MD5 -c -x -o "cloc-$ver.exe" cloc
 
       - name: Upload executable to VirusTotal and get analysis URL
         id: vt_upload
@@ -138,9 +132,10 @@ jobs:
           $vtUrl = "${{ steps.vt_upload.outputs.VT_URL }}"
           $readme = Get-Content README.md -Raw
           $pattern = 'The entries for recent versions are:\s*\r?\n\s*\r?\n'
-          $replacement = "The entries for recent versions are:`n`ncloc-$ver.exe: $vtUrl`n`n"
+          $replacement = "The entries for recent versions are:`n`ncloc-$ver.exe:`n$vtUrl`n`n"
           $newReadme = [regex]::Replace($readme, $pattern, $replacement)
           Set-Content -Path README.md -Value $newReadme
+          (Get-Content README.md -Raw) -replace '\r?\n\s*\r?\n$', "" | Set-Content README.md
 
       - name: Update Unix/NEWS with release notes
         shell: pwsh
@@ -148,17 +143,16 @@ jobs:
           $ver = "${{ steps.get_version.outputs.VERSION_NUM }}"
           $currentDate = (Get-Date).ToString("MMM. d, yyyy")
           $prBody = "${{ github.event.pull_request.body }}"
-          $processedNotes = $prBody -replace '^- ', '    o ' -replace '[\*\`_]', ''
+          $newsContent = Get-Content Unix/NEWS -Raw -Encoding UTF8
+          $processedNotes = $prBody -replace '- ', '    o ' -replace '[\*\`_]', ''
           $header = @(
-            (" " * 16) + "Release Notes for cloc version $ver",
-            (" " * 19) + "https://github.com/AlDanial/cloc",
-            (" " * 29) + "$currentDate",
-            "",
-            $processedNotes.Split("`n"),
-            "",
-            ("=" * 76)
+            "                Release Notes for cloc version $ver",
+            "                   https://github.com/AlDanial/cloc",
+            "                             $currentDate"
           )
-          $header | Set-Content Unix/NEWS -Encoding UTF8
+          $newNews = $header + "" + $processedNotes + "" + ("=" * 76) + $newsContent
+          Set-Content -Path Unix/NEWS -Value $newNews -Encoding UTF8
+          (Get-Content Unix/NEWS -Raw) -replace '\r?\n\s*\r?\n$', "" | Set-Content Unix/NEWS -Encoding UTF8
 
       - name: Commit changes
         shell: pwsh
