@@ -6,7 +6,7 @@ on:
 
 jobs:
   create_release:
-    if: ${{ github.event.pull_request.merged == true && github.head_ref == 'release-v*' }}
+    if: ${{ github.event.pull_request.merged == true && startsWith(github.head_ref, 'release-v') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -34,7 +34,17 @@ jobs:
 
       - name: Get artifact url
         run: |
-          ARTIFACT_URL=$(gh pr view ${{ github.event.pull_request.number }} --json comments -q '.[] | select(.body | contains("**Built executable artifact:**")) | .body' | grep -oP '(?<=\(https:\/\/).*?(?=\))')
+          ARTIFACT_COMMENT=$(gh pr view ${{ github.event.pull_request.number }} --json comments -q '.comments | sort_by(.createdAt) | reverse | map(select(.body | contains("**Built executable artifact:**"))) | .[0].body')
+          if [ -z "$ARTIFACT_COMMENT" ]; then
+            echo "No matching comment found."
+            exit 1
+          fi
+          MATCHING_URLS=$(echo "$ARTIFACT_COMMENT" | grep -oP 'https:\/\/[^\s\)]+')
+          if [ -z "$MATCHING_URLS" ]; then
+            echo "No URL found in the comment."
+            exit 1
+          fi
+          ARTIFACT_URL=$(echo "$MATCHING_URLS" | head -n 1)
           curl -L -o artifact.zip "$ARTIFACT_URL"
 
       - name: Prepare renamed release assets

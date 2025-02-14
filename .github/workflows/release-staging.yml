@@ -118,7 +118,7 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
             **Built executable artifact:**
-            [Download the executable artifact from this workflow run](${{ steps.upload-artifact.outputs.artifact_url }})
+            [Download the executable artifact from this workflow run](${{ steps.upload-artifact.outputs.artifact-url }})
 
             **VirusTotal Analysis:** ${{ steps.vt_upload.outputs.VT_URL }}
 
@@ -147,7 +147,7 @@ jobs:
           $currentDate = (Get-Date).ToString("MMM. d, yyyy")
           $prBody = "${{ github.event.pull_request.body }}"
           $processedNotes = $prBody -replace '- ', '    o ' -replace '[\*\`_]', ''
-          $processedNotes = $processedNotes -replace '"', '\\\"'
+          $processedNotes = $processedNotes -replace '"', '`"'
           $newsContent = Get-Content Unix/NEWS -Raw -Encoding UTF8
           $header = @(
             "                Release Notes for cloc version $ver",
