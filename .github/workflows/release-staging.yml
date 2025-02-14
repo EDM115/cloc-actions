@@ -73,17 +73,15 @@ jobs:
           cpanm Algorithm::Diff
           cpanm PAR::Packer
           cpanm -n Win32::LongPath
-          $logFiles = Get-ChildItem -Path "C:\Users\RUNNER~1\.cpanm\work" -Recurse -Filter "build.log"
-          foreach ($logFile in $logFiles) {
-            Write-Host "Uploading $($logFile.FullName) to bashupload..."
-            curl https://bashupload.com/ -T $logFile.FullName
-          }
       
       - name: Build executable
         shell: pwsh
         run: |
-          $ver = "${{ steps.get_version.outputs.VERSION_NUM }}"
-          pp -M Win32::LongPath -M Encode::Unicode -M Digest::MD5 -c -x -o "cloc-$ver.exe" cloc
+          $ver = "${{ steps.get_version.outputs.VERSION_NUM }}"          
+          Copy-Item cloc cloc-build
+          (Get-Content cloc-build) -replace '(# use modules.*)', "`$1`nuse experimental 'declared_refs';" | Set-Content cloc-build
+          pp -M Win32::LongPath -M Encode::Unicode -M Digest::MD5 -c -x -o "cloc-$ver.exe" cloc-build
+          Remove-Item cloc-build
 
       - name: Upload executable to VirusTotal and get analysis URL
         id: vt_upload
