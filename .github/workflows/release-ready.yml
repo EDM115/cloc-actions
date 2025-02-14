@@ -33,6 +33,7 @@ jobs:
           git archive --format=tar.gz -o cloc-$VER.tar.gz HEAD
 
       - name: Get artifact url
+        id: get_artifact_url
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -53,14 +54,23 @@ jobs:
             exit 1
           fi
           ARTIFACT_URL=$(echo "$MATCHING_URLS" | head -n 1)
-          curl -L -o artifact.zip "$ARTIFACT_URL"
+          RUN_ID=$(echo "$ARTIFACT_URL" | grep -oP '/actions/runs/\K[0-9]+')
+          echo "RUN_ID=$RUN_ID" >> $GITHUB_OUTPUT
+          echo "Artifact URL: $ARTIFACT_URL"
+      
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: cloc-${{ steps.get_version.outputs.VERSION }}-executable
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ steps.get_artifact_url.outputs.RUN_ID }}
 
       - name: Prepare renamed release assets
         run: |
           VER="${{ steps.get_version.outputs.VERSION }}"
           cp cloc cloc-$VER.pl
           cp Unix/NEWS release_notes-$VER.txt
-          unzip artifact.zip
+          unzip cloc-$VER-executable.zip
 
       - name: Create GitHub release with assets
         uses: softprops/action-gh-release@v2
