@@ -164,5 +164,5 @@ jobs:
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           git add cloc README.md Unix/NEWS Unix/cloc
-          git commit -m "Prepare release version $ver"
+          git commit -m "chore: prepare release version $ver"
           git push
