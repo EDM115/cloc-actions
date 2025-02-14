@@ -30,7 +30,7 @@ jobs:
       - name: Package repository as tar.gz
         run: |
           VER="${{ steps.get_version.outputs.VERSION }}"
-          tar -czf cloc-$VER.tar.gz --exclude='.git' .
+          git archive --format=tar.gz -o cloc-$VER.tar.gz HEAD
 
       - name: Get artifact url
         run: |
