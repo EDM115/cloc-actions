@@ -60,7 +60,7 @@ jobs:
             # see https://github.com/StrawberryPerl/Perl-Dist-Strawberry/issues/19#issuecomment-2401043349
             choco uninstall strawberryperl -y
           }
-          choco install strawberryperl --version 5.30.2.1 --no-progress -y
+          choco install strawberryperl --no-progress -y
           perl -V
           cpan -v
 
@@ -71,16 +71,13 @@ jobs:
           cpanm Digest::MD5
           cpanm Regexp::Common
           cpanm Algorithm::Diff
-          cpanm PAR::Packer@1.050
-          if ($LASTEXITCODE -ne 0) {
-            # cpanm --force PAR::Packer
-            $logFiles = Get-ChildItem -Path "C:\Users\RUNNER~1\.cpanm\work" -Recurse -Filter "build.log"
-            foreach ($logFile in $logFiles) {
-              Write-Host "Uploading $($logFile.FullName) to bashupload..."
-              curl https://bashupload.com/ -T $logFile.FullName
-            }
+          cpanm PAR::Packer
+          cpanm -n Win32::LongPath
+          $logFiles = Get-ChildItem -Path "C:\Users\RUNNER~1\.cpanm\work" -Recurse -Filter "build.log"
+          foreach ($logFile in $logFiles) {
+            Write-Host "Uploading $($logFile.FullName) to bashupload..."
+            curl https://bashupload.com/ -T $logFile.FullName
           }
-          cpanm Win32::LongPath
       
       - name: Build executable
         shell: pwsh
