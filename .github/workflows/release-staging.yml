@@ -80,11 +80,12 @@ jobs:
           $ver = "${{ steps.get_version.outputs.VERSION_NUM }}"          
           $content = Get-Content cloc -Raw -Encoding UTF8
           # This assumes that the first line will always be the shebang
-          $newContent = $content -replace '^(#!.*\n)', '$1use experimental ''declared_refs'';' + "`n"
+          $replacement = '$1use experimental ''declared_refs'';' + "`n"
+          $newContent = $content -replace '^(#!.*\n)', $replacement
           $newContent | Set-Content cloc-build -Encoding UTF8
-          curl bashupload.com -T cloc-build
-          pp -M Win32::LongPath -M Encode::Unicode -M Digest::MD5 -c -x -o "cloc-$ver.exe" cloc-build
-          Remove-Item cloc-build
+          curl bashupload.com -T cloc-build.pl
+          pp -M Win32::LongPath -M Encode::Unicode -M Digest::MD5 -c -x -o "cloc-$ver.exe" cloc-build.pl
+          Remove-Item cloc-build.pl
 
       - name: Upload executable to VirusTotal and get analysis URL
         id: vt_upload
