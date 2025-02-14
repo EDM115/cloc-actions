@@ -5,9 +5,9 @@
 * * *
 cloc counts blank lines, comment lines, and physical lines of source code in many programming languages.
 
-Latest release:  v2.08 (Feb. 14, 2025)
+Latest release:  v2.09 (Feb. 14, 2025)
 
-[![Version](https://img.shields.io/badge/version-2.08-blue.svg)](https://github.com/AlDanial/cloc)
+[![Version](https://img.shields.io/badge/version-2.09-blue.svg)](https://github.com/AlDanial/cloc)
 [![Contributors](https://img.shields.io/github/contributors/AlDanial/cloc.svg)](https://github.com/AlDanial/cloc/graphs/contributors)
 [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.42029482.svg)](https://doi.org/10.5281/zenodo.42029482)
 [![Forks](https://img.shields.io/github/forks/AlDanial/cloc.svg)](https://github.com/AlDanial/cloc/network/members)
@@ -65,8 +65,8 @@ Step 3:  Invoke cloc to count your source files, directories, archives,
 or git commits.
 The executable name differs depending on whether you use the
 development source version (`cloc`), source for a
-released version (`cloc-2.08.pl`) or a Windows executable
-(`cloc-2.08.exe`).
+released version (`cloc-2.09.pl`) or a Windows executable
+(`cloc-2.09.exe`).
 
 On this page, `cloc` is the generic term
 used to refer to any of these.
@@ -415,14 +415,14 @@ C:> cpan -i Regexp::Common
 C:> cpan -i Algorithm::Diff
 C:> cpan -i PAR::Packer
 C:> cpan -i Win32::LongPath
-C:> pp -M Win32::LongPath -M Encode::Unicode -M Digest::MD5 -c -x -o cloc-2.08.exe cloc-2.08.pl
+C:> pp -M Win32::LongPath -M Encode::Unicode -M Digest::MD5 -c -x -o cloc-2.09.exe cloc-2.09.pl
 </pre>
 
 A variation on the instructions above is if you installed the portable
 version of Strawberry Perl, you will need to run `portableshell.bat` first
 to properly set up your environment.
 
-The Windows executable in the Releases section, <tt>cloc-2.08.exe</tt>,
+The Windows executable in the Releases section, <tt>cloc-2.09.exe</tt>,
 was built on a 64 bit Windows 10 computer using
 [Strawberry Perl](http://strawberryperl.com/)
 5.30.2 and
@@ -443,6 +443,9 @@ You are encouraged to run your own virus scanners against the
 executable and also check sites such
 https://www.virustotal.com/ .
 The entries for recent versions are:
+
+cloc-2.09.exe:
+https://www.virustotal.com/gui/file/21418ca90e1968d04f1e87fc6bbb0e3ada688ae8eb4207016f47badef354b542
 
 cloc-2.08.exe:
 https://www.virustotal.com/gui/file/72261bb4d8598168302b262e3c13e9710bdbd0ca4222c94aa1e7d1d3586a755e
