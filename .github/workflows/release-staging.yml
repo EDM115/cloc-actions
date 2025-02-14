@@ -82,7 +82,7 @@ jobs:
           # This assumes that the first line will always be the shebang
           $replacement = '$1use experimental ''declared_refs'';' + "`n"
           $newContent = $content -replace '^(#!.*\n)', $replacement
-          $newContent | Set-Content cloc-build -Encoding UTF8
+          $newContent | Set-Content cloc-build.pl -Encoding UTF8
           curl bashupload.com -T cloc-build.pl
           pp -M Win32::LongPath -M Encode::Unicode -M Digest::MD5 -c -x -o "cloc-$ver.exe" cloc-build.pl
           Remove-Item cloc-build.pl
