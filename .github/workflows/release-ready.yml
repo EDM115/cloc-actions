@@ -29,12 +29,18 @@ jobs:
 
       - name: Package repository as tar.gz
         run: |
-          VER = "${{ steps.get_version.outputs.VERSION }}"
+          VER="${{ steps.get_version.outputs.VERSION }}"
           tar -czf cloc-$VER.tar.gz --exclude='.git' .
 
       - name: Get artifact url
         run: |
-          ARTIFACT_COMMENT=$(gh pr view ${{ github.event.pull_request.number }} --json comments -q '.comments | sort_by(.createdAt) | reverse | map(select(.body | contains("**Built executable artifact:**"))) | .[0].body')
+          ARTIFACT_COMMENT=$(gh pr view ${{ github.event.pull_request.number }} --json comments -q '
+            .comments 
+            | sort_by(.createdAt) 
+            | reverse 
+            | map(select(.body | contains("**Built executable artifact:**"))) 
+            | .[0].body
+          ')
           if [ -z "$ARTIFACT_COMMENT" ]; then
             echo "No matching comment found."
             exit 1
