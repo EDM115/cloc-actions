@@ -1429,4 +1429,3 @@ Other Improvements:
       does not match any recognized language).
     o Contents of .hg/ (Mercurial) directories are ignored.
     o On Windows: Ignore case in file name extensions.
-
