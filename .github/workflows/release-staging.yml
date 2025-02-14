@@ -71,9 +71,9 @@ jobs:
           cpanm Digest::MD5
           cpanm Regexp::Common
           cpanm Algorithm::Diff
-          cpanm PAR::Packer
+          cpanm PAR::Packer@1.050
           if ($LASTEXITCODE -ne 0) {
-            cpanm --force PAR::Packer
+            # cpanm --force PAR::Packer
             $logFiles = Get-ChildItem -Path "C:\Users\RUNNER~1\.cpanm\work" -Recurse -Filter "build.log"
             foreach ($logFile in $logFiles) {
               Write-Host "Uploading $($logFile.FullName) to bashupload..."
