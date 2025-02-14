@@ -94,10 +94,10 @@ jobs:
           $headers.Add("accept", "application/json")
           $headers.Add("content-type", "multipart/form-data")
           $headers.Add("x-apikey", $apiKey)
-          $body = @{
-            file = [System.IO.File]::ReadAllBytes($absoluteFilePath)
-          }
-          $response = Invoke-RestMethod -Uri "https://www.virustotal.com/api/v3/files" -Method POST -Headers $headers -Form $body
+          $response = Invoke-RestMethod -Uri "https://www.virustotal.com/api/v3/files" `
+                                     -Method POST `
+                                     -Headers $headers `
+                                     -Form @{ file = Get-Item -Path $absoluteFilePath }
           $vtId = $response.data.id
           $vtUrl = "https://www.virustotal.com/gui/file/$vtId"
           echo "VT_URL=$vtUrl" >> $env:GITHUB_OUTPUT
