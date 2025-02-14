@@ -107,6 +107,7 @@ jobs:
       
       - name: Upload artifact
         uses: actions/upload-artifact@v4
+        id: upload-artifact
         with:
           name: cloc-${{ steps.get_version.outputs.VERSION_NUM }}-executable
           path: cloc-${{ steps.get_version.outputs.VERSION_NUM }}.exe
@@ -117,7 +118,7 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
             **Built executable artifact:**
-            [Download the executable artifact from this workflow run](https://github.com/${{ github.repository }}/suites/${{ github.run_id }}/artifacts)
+            [Download the executable artifact from this workflow run](${{ steps.upload-artifact.outputs.artifact_url }})
 
             **VirusTotal Analysis:** ${{ steps.vt_upload.outputs.VT_URL }}
 
@@ -146,7 +147,7 @@ jobs:
           $currentDate = (Get-Date).ToString("MMM. d, yyyy")
           $prBody = "${{ github.event.pull_request.body }}"
           $processedNotes = $prBody -replace '- ', '    o ' -replace '[\*\`_]', ''
-          $processedNotes = $processedNotes -replace '"', '\"'
+          $processedNotes = $processedNotes -replace '"', '\\\"'
           $newsContent = Get-Content Unix/NEWS -Raw -Encoding UTF8
           $header = @(
             "                Release Notes for cloc version $ver",
