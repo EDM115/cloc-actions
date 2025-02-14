@@ -1,4 +1,4 @@
-name: Create Release
+name: Create release
 
 on:
   pull_request:
@@ -6,7 +6,7 @@ on:
 
 jobs:
   create_release:
-    if: ${{ github.event.pull_request.merged == true && github.head_ref == 'release-v*' }}
+    if: ${{ github.event.pull_request.merged == true && startsWith(github.head_ref, 'release-v') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -21,8 +21,8 @@ jobs:
           BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}"
           if [[ "$BRANCH" =~ release-v([0-9]+\.[0-9]+) ]]; then
             VERSION="${BASH_REMATCH[1]}"
-            echo "VERSION=$VERSION" >> $GITHUB_ENV
-            echo "DISPLAY_VERSION=v$VERSION"
+            echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+            echo "DISPLAY_VERSION=v$VERSION" >> $GITHUB_OUTPUT
           else
             echo "Branch name does not match expected format (release-vX.XX)!" && exit 1
           fi
@@ -34,7 +34,17 @@ jobs:
 
       - name: Get artifact url
         run: |
-          ARTIFACT_URL=$(gh pr view ${{ github.event.pull_request.number }} --json comments -q '.[] | select(.body | contains("**Built executable artifact:**")) | .body' | grep -oP '(?<=\(https:\/\/).*?(?=\))')
+          ARTIFACT_COMMENT=$(gh pr view ${{ github.event.pull_request.number }} --json comments -q '.comments | sort_by(.createdAt) | reverse | map(select(.body | contains("**Built executable artifact:**"))) | .[0].body')
+          if [ -z "$ARTIFACT_COMMENT" ]; then
+            echo "No matching comment found."
+            exit 1
+          fi
+          MATCHING_URLS=$(echo "$ARTIFACT_COMMENT" | grep -oP 'https:\/\/[^\s\)]+')
+          if [ -z "$MATCHING_URLS" ]; then
+            echo "No URL found in the comment."
+            exit 1
+          fi
+          ARTIFACT_URL=$(echo "$MATCHING_URLS" | head -n 1)
           curl -L -o artifact.zip "$ARTIFACT_URL"
 
       - name: Prepare renamed release assets
@@ -45,7 +55,6 @@ jobs:
           unzip artifact.zip
 
       - name: Create GitHub release with assets
-        id: create_release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: "${{ steps.get_version.outputs.DISPLAY_VERSION }}"
