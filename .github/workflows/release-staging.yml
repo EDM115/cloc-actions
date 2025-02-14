@@ -98,7 +98,9 @@ jobs:
                                      -Method POST `
                                      -Headers $headers `
                                      -Form @{ file = Get-Item -Path $absoluteFilePath }
-          $vtId = $response.data.id
+          $vtAnalysisId = $response.data.id
+          $response2 = Invoke-WebRequest -Uri "https://www.virustotal.com/api/v3/analyses/$vtAnalysisId" -Method GET -Headers $headers
+          $vtId = ($response2.Content | ConvertFrom-Json).data.links.item.Split("/")[-1]
           $vtUrl = "https://www.virustotal.com/gui/file/$vtId"
           echo "VT_URL=$vtUrl" >> $env:GITHUB_OUTPUT
           Write-Host "VirusTotal analysis available at $vtUrl"
@@ -143,8 +145,9 @@ jobs:
           $ver = "${{ steps.get_version.outputs.VERSION_NUM }}"
           $currentDate = (Get-Date).ToString("MMM. d, yyyy")
           $prBody = "${{ github.event.pull_request.body }}"
-          $newsContent = Get-Content Unix/NEWS -Raw -Encoding UTF8
           $processedNotes = $prBody -replace '- ', '    o ' -replace '[\*\`_]', ''
+          $processedNotes = $processedNotes -replace '"', '\"'
+          $newsContent = Get-Content Unix/NEWS -Raw -Encoding UTF8
           $header = @(
             "                Release Notes for cloc version $ver",
             "                   https://github.com/AlDanial/cloc",
