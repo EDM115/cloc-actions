@@ -82,7 +82,7 @@ jobs:
           # This assumes that the first line will always be the shebang
           $firstLine = $content[0]
           $rest = $content[1..($content.Length - 1)]
-          $header = @($firstLine, 'use experimental "declared_refs";')
+          $header = @($firstLine, "use experimental 'declared_refs';")
           $combined = $header + $rest
           $combined | Set-Content cloc-build
           pp -M Win32::LongPath -M Encode::Unicode -M Digest::MD5 -c -x -o "cloc-$ver.exe" cloc-build
