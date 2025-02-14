@@ -64,18 +64,20 @@ jobs:
           perl -V
           cpan -v
 
-      - name: Install CPAN dependencies and build executable
+      - name: Install CPAN dependencies
+        shell: pwsh
+        run: |
+          cpan -i App::cpanminus
+          cpanm Digest::MD5
+          cpanm Regexp::Common
+          cpanm Algorithm::Diff
+          cpanm -nf PAR::Packer
+          cpanm -nf Win32::LongPath
+      
+      - name: Build executable
         shell: pwsh
         run: |
           $ver = "${{ steps.get_version.outputs.VERSION_NUM }}"
-          Write-Host "Installing CPAN modules..."
-          cpan -i Digest::MD5
-          cpan -i Regexp::Common
-          cpan -i Algorithm::Diff
-          cpan -i App::cpanminus
-          cpanm PAR::Packer@1.050
-          cpan -if Win32::LongPath || cpanm --notest Win32::LongPath
-          Write-Host "Building executable..."
           pp -M Win32::LongPath -M Encode::Unicode -M Digest::MD5 -c -x -o "cloc-$ver.exe" cloc
 
       - name: Upload executable to VirusTotal and get analysis URL
