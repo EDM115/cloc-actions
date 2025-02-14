@@ -78,8 +78,13 @@ jobs:
         shell: pwsh
         run: |
           $ver = "${{ steps.get_version.outputs.VERSION_NUM }}"          
-          Copy-Item cloc cloc-build
-          (Get-Content cloc-build) -replace '(# use modules.*)', "`$1`nuse experimental 'declared_refs';" | Set-Content cloc-build
+          $content = Get-Content cloc
+          # This assumes that the first line will always be the shebang
+          $firstLine = $content[0]
+          $rest = $content[1..($content.Length - 1)]
+          $header = @($firstLine, 'use experimental "declared_refs";')
+          $combined = $header + $rest
+          $combined | Set-Content cloc-build
           pp -M Win32::LongPath -M Encode::Unicode -M Digest::MD5 -c -x -o "cloc-$ver.exe" cloc-build
           Remove-Item cloc-build
 
