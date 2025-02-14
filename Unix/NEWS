@@ -1,3 +1,20 @@
+                Release Notes for cloc version 2.06
+                   https://github.com/AlDanial/cloc
+                             Feb. 14, 2025
+
+Body description:
+    o Can be multiline
+    o Will update the Unix/NEWS file and every version number accordingly
+    o Correct formatting and VT upload
+
+Feat:
+    o New actions
+
+Extra:
+    o Must have VIRUSTOTALAPIKEY set (https://github.com/AlDanial/cloc/settings/secrets/actions/new)
+    o Release must have tag "release-staging", either at creation or afterwards, once ready
+
+============================================================================
                 Release Notes for cloc version 2.04
                    https://github.com/AlDanial/cloc
                              Jan. 31, 2025
