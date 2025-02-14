@@ -70,6 +70,7 @@ jobs:
           VER="${{ steps.get_version.outputs.VERSION }}"
           cp cloc cloc-$VER.pl
           cp Unix/NEWS release_notes-$VER.txt
+          ls -R $GITHUB_WORKSPACE
           unzip cloc-$VER-executable.zip
 
       - name: Create GitHub release with assets
