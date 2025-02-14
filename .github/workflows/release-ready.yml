@@ -62,7 +62,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: cloc-${{ steps.get_version.outputs.VERSION }}-executable
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ steps.get_artifact_url.outputs.RUN_ID }}
 
       - name: Prepare renamed release assets
@@ -78,11 +78,10 @@ jobs:
           tag_name: "${{ steps.get_version.outputs.DISPLAY_VERSION }}"
           name: "${{ steps.get_version.outputs.DISPLAY_VERSION }}"
           body: "${{ github.event.pull_request.body }}"
+          token: ${{ secrets.GITHUB_TOKEN }}
           files: |
             cloc-${{ steps.get_version.outputs.VERSION }}.tar.gz
             README.md
             cloc-${{ steps.get_version.outputs.VERSION }}.pl
             cloc-${{ steps.get_version.outputs.VERSION }}.exe
             release_notes-${{ steps.get_version.outputs.VERSION }}.txt
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
