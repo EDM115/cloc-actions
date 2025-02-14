@@ -71,14 +71,15 @@ jobs:
           cpanm Digest::MD5
           cpanm Regexp::Common
           cpanm Algorithm::Diff
-          cpanm PAR::Packer || (
+          cpanm PAR::Packer
+          if ($LASTEXITCODE -ne 0) {
             cpanm --force PAR::Packer
             $logFiles = Get-ChildItem -Path "C:\Users\RUNNER~1\.cpanm\work" -Recurse -Filter "build.log"
             foreach ($logFile in $logFiles) {
-              Write-Host "Uploading $logFile to bashupload..."
+              Write-Host "Uploading $($logFile.FullName) to bashupload..."
               curl https://bashupload.com/ -T $logFile.FullName
             }
-          )
+          }
           cpanm Win32::LongPath
       
       - name: Build executable
