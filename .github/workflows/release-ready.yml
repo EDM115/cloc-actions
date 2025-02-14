@@ -33,8 +33,9 @@ jobs:
           git archive --format=tar.gz -o cloc-$VER.tar.gz HEAD
 
       - name: Get artifact url
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
           ARTIFACT_COMMENT=$(gh pr view ${{ github.event.pull_request.number }} --json comments -q '
             .comments 
             | sort_by(.createdAt) 
